@@ -29,7 +29,7 @@ export PATH=${EC2_HOME}/bin:${PATH}
 
 # Image settings
 IMAGE_BUNDLE_DIR=${IMAGE_BUNDLE_DIR:-/mnt/tmp/bundle}
-IMAGE_EXCLUDES="${TEMP_DIR},/tmp,/mnt"
+IMAGE_EXCLUDES="${TEMP_DIR},/mnt"
 IMAGE_PREFIX=${IMAGE_PREFIX:-cached}
 IMAGE_NAME=${IMAGE_NAME:-$(hostname)}
 IMAGE_STAMP=$(date +%Y-%m-%d-%H-%M-%S)
