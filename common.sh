@@ -162,17 +162,26 @@ install_rsc() {
     RSC_API_CMD="${RSC_BIN} --config ${TEMP_DIR}/.rsc"
     RSC_INST_CMD="${RSC_BIN} --account $RS_ACCOUNT --apiToken $RS_API_TOKEN --host $RS_SERVER"
 
-    rm -f ${TEMP_DIR}/.rsc
-    echo "${RS_ACCOUNT}
-${RIGHTSCALE_API_EMAIL}
-${RIGHTSCALE_API_PASS}
-${RS_SERVER}" | $RSC_API_CMD setup
+  elif pgrep rightlink > /dev/null 2>&1; then
+    RSC_API_CMD="${RSC_BIN} --config ${TEMP_DIR}/.rsc"
+    RSC_INST_CMD="${RSC_BIN} --rl10"
+
+    # Supplied by RL10 during runtime
+    RS_ACCOUNT=$account
+    RS_SERVER=$api_hostname
   else
     error "No RightScale user-data.sh script found."
   fi
 
   info "RSC_API_CMD: ${RSC_API_CMD}"
   info "RSC_INST_CMD: ${RSC_INST_CMD}"
+
+  rm -f ${TEMP_DIR}/.rsc
+  echo "${RS_ACCOUNT}
+${RIGHTSCALE_API_EMAIL}
+${RIGHTSCALE_API_PASS}
+${RS_SERVER}" | $RSC_API_CMD setup
+
 }
 
 # Discovers a bunch of information about the instance itself that will be
