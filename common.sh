@@ -378,9 +378,7 @@ register_bundle() {
 # This can be missing, if the grub-legacy-ec2 package is missing.
 #
 generate_grub_menu() {
-  if ! test -f "/boot/grub/menu.lst"; then
-    dry_exec "update-grub -y"
-  fi
+  dry_exec "update-grub -y"
 
   # If we're an HVM instance, we need to patch the Grub boot loader
   #
