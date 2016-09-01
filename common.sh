@@ -228,6 +228,11 @@ discover_instance_info() {
   fi
   info "VIRTUALIZATION: ${VIRTUALIZATION}"
 
+  # Discover if we have Enhanced Networking enabled on the source instance
+  # (us!). If so, we'll also enable it on the target AMI
+  SRIOV=$(ec2-describe-instance-attribute ${INSTANCE_ID} --sriov | awk '{print $3}')
+  info "SRIOV: ${SRIOV}"
+
   # Auto-discover whether we're an EBS image or not
   if test "$(curl -s http://169.254.169.254/latest/meta-data/ami-manifest-path/)" = "(unknown)"; then
     export IMAGE_TYPE=EBS
@@ -361,12 +366,21 @@ register_bundle() {
     EC2_REGISTER_ARGS="${IMAGE_BUCKET}/image_bundles/${FULL_IMAGE_NAME}/image.manifest.xml ${EC2_REGISTER_ARGS}"
   fi
 
+  if test "$SRIOV" = "simple"; then
+    EC2_REGISTER_ARGS="--sriov ${SRIOV} ${EC2_REGISTER_ARGS}"
+  else
+    info "No Enhanced Networking Detected"
+  fi
+
+  REG_CMD="ec2-register ${EC2_REGISTER_ARGS}"
+
   if test $DRY -eq 1; then
-    dry_exec "ec2-register ${EC2_REGISTER_ARGS}"
+    dry_exec "$REG_CMD"
     warn "Setting FAKE AMI_ID variable for the rest of the DRY run."
     AMI_ID=FAKE-AMI-IMAGE
   else
-    AMI_ID=$(ec2-register ${EC2_REGISTER_ARGS} | grep ami | awk '{print $2}')
+    info "Running: $REG_CMD"
+    AMI_ID=$($REG_CMD | grep ami | awk '{print $2}')
     if test -z "$AMI_ID"; then error "Something went wrong in the AMI registration."; fi
   fi
 
@@ -378,7 +392,13 @@ register_bundle() {
 # This can be missing, if the grub-legacy-ec2 package is missing.
 #
 generate_grub_menu() {
-  dry_exec "update-grub -y"
+  if test -e "/boot/grub/menu.lst"; then
+    info "--- /boot/grub/menu.lst ---"
+    cat /boot/grub/menu.lst | egrep -v '^#|^$'
+    info "--- END ---"
+  else
+    error "Unable to find /boot/grub/menu.lst.. you must create this first!"
+  fi
 
   # If we're an HVM instance, we need to patch the Grub boot loader
   #
