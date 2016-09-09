@@ -230,7 +230,7 @@ discover_instance_info() {
 
   # Discover if we have Enhanced Networking enabled on the source instance
   # (us!). If so, we'll also enable it on the target AMI
-  SRIOV=$(ec2-describe-instance-attribute ${INSTANCE_ID} --sriov | awk '{print $3}')
+  SRIOV=$(ec2-describe-instance-attribute ${INSTANCE_ID} --sriov --region ${EC2_REGION} | awk '{print $3}')
   info "SRIOV: ${SRIOV}"
 
   # Auto-discover whether we're an EBS image or not
